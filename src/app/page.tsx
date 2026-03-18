@@ -63,7 +63,7 @@ export default function Home() {
     setAnswers([]);
     setCurrentQuestionIndex(0);
     setIsResultReady(false);
-    setStage("home");
+    setStage("test");
   };
 
   return (

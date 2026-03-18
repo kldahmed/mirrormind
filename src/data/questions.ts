@@ -29,8 +29,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 1,
     prompt: {
-      ar: "تغيّر مسار مشروع مهم بشكل مفاجئ. ما أول خطوة تقوم بها؟",
-      en: "A critical project suddenly changes direction. Your first move is:",
+      ar: "المشروع تغيّر فجأة. أول خطوة تقوم بها؟",
+      en: "Project changed suddenly. What's your first move?",
     },
     options: [
       {
@@ -66,8 +66,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 2,
     prompt: {
-      ar: "عند تعلم شيء جديد، ما الأسلوب الذي تستوعب به أسرع؟",
-      en: "When learning something new, you absorb it best by:",
+      ar: "كيف تستوعب الأشياء الجديدة بشكل أسرع؟",
+      en: "How do you learn something new best?",
     },
     options: [
       {
@@ -103,8 +103,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 3,
     prompt: {
-      ar: "في القرارات الجماعية، يعتمد عليك الناس غالبًا من أجل:",
-      en: "In group decisions, people rely on you for:",
+      ar: "على ماذا يعتمد عليك الناس في المجموعة؟",
+      en: "What do people rely on you for?",
     },
     options: [
       {
@@ -140,8 +140,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 4,
     prompt: {
-      ar: "عطلة نهاية أسبوع بلا التزامات تبدو مثالية إذا كنت:",
-      en: "A weekend with no obligations sounds most appealing if you:",
+      ar: "عطلة بلا التزامات. كيف تقضيها؟",
+      en: "Free weekend, no obligations. What do you do?",
     },
     options: [
       {
@@ -177,8 +177,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 5,
     prompt: {
-      ar: "ما الوصف الأقرب لعلاقتك مع الفشل؟",
-      en: "What best describes your relationship with failure?",
+      ar: "ما علاقتك بالفشل؟",
+      en: "How do you relate to failure?",
     },
     options: [
       {
@@ -214,8 +214,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 6,
     prompt: {
-      ar: "عندما يظهر خلاف، ما رد فعلك التلقائي؟",
-      en: "When conflict appears, your instinct is to:",
+      ar: "ظهر خلاف. ما ردة فعلك التلقائية؟",
+      en: "Conflict appears. What's your instinct?",
     },
     options: [
       {
@@ -251,8 +251,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 7,
     prompt: {
-      ar: "بيئة العمل المثالية لك هي:",
-      en: "Your ideal work environment is:",
+      ar: "ما بيئة العمل المثالية لك؟",
+      en: "What's your ideal work environment?",
     },
     options: [
       {
@@ -288,8 +288,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 8,
     prompt: {
-      ar: "قرار صعب يجب اتخاذه بسرعة. ما أولويتك؟",
-      en: "A difficult decision must be made quickly. You prioritize:",
+      ar: "قرار صعب بسرعة. ماذا تختار أولًا؟",
+      en: "Hard decision, fast. What do you prioritize?",
     },
     options: [
       {
@@ -325,8 +325,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 9,
     prompt: {
-      ar: "أي مديح تشعر أنه يصفك بدقة أكبر؟",
-      en: "Which compliment feels most accurate to you?",
+      ar: "أي إطراء يصفك بدقة أكثر؟",
+      en: "Which compliment fits you most?",
     },
     options: [
       {
@@ -362,8 +362,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 10,
     prompt: {
-      ar: "عند مواجهة الغموض، ما السلوك الأقرب لك؟",
-      en: "When facing ambiguity, you are most likely to:",
+      ar: "عند الغموض، ما سلوكك الأقرب؟",
+      en: "Facing ambiguity, what do you do?",
     },
     options: [
       {
@@ -399,8 +399,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 11,
     prompt: {
-      ar: "ترتفع طاقتك أكثر عندما تكون:",
-      en: "Your energy spikes most when you are:",
+      ar: "طاقتك ترتفع أكثر في أي موقف؟",
+      en: "When does your energy spike most?",
     },
     options: [
       {
@@ -436,8 +436,8 @@ export const QUESTIONS: Question[] = [
   {
     id: 12,
     prompt: {
-      ar: "في أفضل حالاتك، أسلوبك في اتخاذ القرار يبدو كأنه:",
-      en: "At your best, your decision style feels like:",
+      ar: "في أفضل حالاتك، كيف تتخذ قراراتك؟",
+      en: "At your best, how do you decide?",
     },
     options: [
       {
