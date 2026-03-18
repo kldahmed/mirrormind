@@ -299,11 +299,11 @@ export function FeaturedChallengeHub({ locale, onStartGame }: FeaturedChallengeH
             <p className="text-xs tracking-[0.2em] text-slate-400">
               {locale === "ar" ? "اسمك الحالي" : "CURRENT PLAYER NAME"}
             </p>
-            <h4 className="mt-2 text-xl font-bold text-white">{playerName || (locale === "ar" ? "سيظهر عند أول مشاركة" : "Will appear on first share")}</h4>
+            <h4 className="mt-2 text-xl font-bold text-white">{playerName || (locale === "ar" ? "أضف اسمك قبل اللعب" : "Add your name before playing")}</h4>
             <p className="mt-2 text-sm text-slate-400">
               {locale === "ar"
-                ? "سيُستخدم اسم العرض في بطاقات المشاركة، نتائج التحدي، ولوحة الصدارة."
-                : "Your display name is used in share cards, challenge results, and leaderboard entries."}
+                ? "اسمك إلزامي لبدء الألعاب، ويُستخدم في بطاقات المشاركة، نتائج التحدي، ولوحة الصدارة."
+                : "Your name is required before games start and is used in share cards, challenge results, and leaderboard entries."}
             </p>
           </section>
         </div>

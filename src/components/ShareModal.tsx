@@ -4,12 +4,14 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Locale } from "@/lib/i18n";
 import {
+  MAX_PLAYER_NAME_LENGTH,
+  MIN_PLAYER_NAME_LENGTH,
   buildShareText,
   formatScoreValue,
   formatShareDateTime,
   formatTimeMetric,
-  getFallbackDisplayName,
   getStoredPlayerName,
+  isValidPlayerName,
   sanitizeDisplayName,
   setStoredPlayerName,
   type ShareableResult,
@@ -33,21 +35,30 @@ export function ShareModal({ locale, open, result, onClose }: ShareModalProps) {
 function ShareModalSheet({ locale, result, onClose }: { locale: Locale; result: ShareableResult; onClose: () => void }) {
   const [name, setName] = useState(() => getStoredPlayerName());
   const [status, setStatus] = useState<"idle" | "success" | "copied" | "error">("idle");
+  const [showNameError, setShowNameError] = useState(false);
   const [sharedAt] = useState(() => new Date());
   const canUseWebShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const sanitizedName = useMemo(() => sanitizeDisplayName(name), [name]);
+  const isNameValid = isValidPlayerName(sanitizedName);
 
-  const resolvedName = useMemo(() => {
-    const sanitized = sanitizeDisplayName(name);
-    return sanitized || getFallbackDisplayName(locale);
-  }, [locale, name]);
+  const resolvedName = isNameValid
+    ? sanitizedName
+    : locale === "ar"
+      ? "اسمك سيظهر هنا"
+      : "Your name will appear here";
 
   const handleShare = async () => {
-    const sanitized = sanitizeDisplayName(name);
-    setStoredPlayerName(sanitized);
+    if (!isNameValid) {
+      setShowNameError(true);
+      setStatus("idle");
+      return;
+    }
+
+    setStoredPlayerName(sanitizedName);
 
     const shareText = buildShareText({
       locale,
-      playerName: sanitized || getFallbackDisplayName(locale),
+      playerName: sanitizedName,
       result,
       sharedAt,
       siteUrl: typeof window !== "undefined" ? window.location.href : undefined,
@@ -108,8 +119,8 @@ function ShareModalSheet({ locale, result, onClose }: { locale: Locale; result: 
                   </h3>
                   <p className="mt-2 text-sm text-slate-400">
                     {locale === "ar"
-                      ? "أدخل اسم العرض قبل المشاركة. الاسم اختياري لكن يجعل التحدي أكثر شخصية."
-                      : "Add a display name before sharing. It is optional, but it makes the challenge feel personal."}
+                      ? "أدخل اسمك قبل المشاركة. الاسم مطلوب ويُستخدم في التحدي ولوحة الصدارة."
+                      : "Enter your name before sharing. It is required and used for challenges and leaderboards."}
                   </p>
                 </div>
                 <button
@@ -123,19 +134,33 @@ function ShareModalSheet({ locale, result, onClose }: { locale: Locale; result: 
 
               <label className="mt-5 block">
                 <span className="mb-2 block text-sm font-medium text-slate-200">
-                  {locale === "ar" ? "اسم العرض" : "Display name"}
+                  {locale === "ar" ? "اسمك" : "Your name"}
                 </span>
                 <input
                   value={name}
-                  onChange={(event) => setName(sanitizeDisplayName(event.target.value))}
-                  maxLength={20}
-                  placeholder={getFallbackDisplayName(locale)}
+                  onChange={(event) => setName(event.target.value)}
+                  onBlur={() => setShowNameError(true)}
+                  required
+                  minLength={MIN_PLAYER_NAME_LENGTH}
+                  maxLength={MAX_PLAYER_NAME_LENGTH}
+                  placeholder={locale === "ar" ? "مثال: أحمد" : "Example: Alex"}
                   className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-base text-white outline-none transition focus:border-cyan-300/40 focus:bg-white/8"
                 />
                 <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
-                  <span>{locale === "ar" ? "اختياري، بحد أقصى 20 حرفاً" : "Optional, up to 20 characters"}</span>
-                  <span>{sanitizeDisplayName(name).length}/20</span>
+                  <span>
+                    {locale === "ar"
+                      ? `${MIN_PLAYER_NAME_LENGTH}-${MAX_PLAYER_NAME_LENGTH} حرفاً`
+                      : `${MIN_PLAYER_NAME_LENGTH}-${MAX_PLAYER_NAME_LENGTH} characters`}
+                  </span>
+                  <span>{sanitizedName.length}/{MAX_PLAYER_NAME_LENGTH}</span>
                 </div>
+                {showNameError && !isNameValid && (
+                  <p className="mt-2 text-sm text-rose-300">
+                    {locale === "ar"
+                      ? `اكتب اسماً صالحاً بين ${MIN_PLAYER_NAME_LENGTH} و${MAX_PLAYER_NAME_LENGTH} حرفاً.`
+                      : `Enter a valid name between ${MIN_PLAYER_NAME_LENGTH} and ${MAX_PLAYER_NAME_LENGTH} characters.`}
+                  </p>
+                )}
               </label>
 
               <div className="mt-5 overflow-hidden rounded-[24px] border border-cyan-300/20 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_30%),linear-gradient(145deg,rgba(15,23,42,0.98),rgba(17,24,39,0.94))] p-5 sm:p-6">
@@ -178,7 +203,8 @@ function ShareModalSheet({ locale, result, onClose }: { locale: Locale; result: 
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="h-12 flex-1 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-500 px-5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(34,211,238,0.22)] transition hover:opacity-95 active:scale-[0.99]"
+                  disabled={!isNameValid}
+                  className="h-12 flex-1 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-500 px-5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(34,211,238,0.22)] transition hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {canUseWebShare
                     ? locale === "ar"

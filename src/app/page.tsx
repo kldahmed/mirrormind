@@ -12,6 +12,7 @@ import { PersonalitySummary } from "@/components/PersonalitySummary";
 import { QuestionCard } from "@/components/QuestionCard";
 import { ResultCard } from "@/components/ResultCard";
 import { TraitMeter } from "@/components/TraitMeter";
+import { PlayerNameModal } from "@/components/PlayerNameModal";
 import { DecisionSpeed } from "@/components/games/DecisionSpeed";
 import { FocusChallenge } from "@/components/games/FocusChallenge";
 import { IntuitionTest } from "@/components/games/IntuitionTest";
@@ -20,7 +21,10 @@ import { RiskOrSafe } from "@/components/games/RiskOrSafe";
 import { QUESTIONS } from "@/data/questions";
 import {
   buildChallengeEntry,
+  getStoredPlayerName,
+  isValidPlayerName,
   saveLocalAttempt,
+  setStoredPlayerName,
   submitFeaturedAttempt,
   type GameId,
   type TimeKind,
@@ -41,6 +45,8 @@ export default function Home() {
   const [answers, setAnswers] = useState<number[]>([]);
   const [isResultReady, setIsResultReady] = useState(false);
   const [activeGame, setActiveGame] = useState<ActiveGame>(null);
+  const [pendingGame, setPendingGame] = useState<GameId | null>(null);
+  const [isPlayerNameModalOpen, setIsPlayerNameModalOpen] = useState(false);
 
   const currentQuestion = QUESTIONS[currentQuestionIndex];
   const result = useMemo(() => getPersonalityResult(answers), [answers]);
@@ -96,7 +102,7 @@ export default function Home() {
   };
 
   const persistGameAttempt = (gameId: GameId, score: number, timeMs: number | null, timeKind: TimeKind) => {
-    const entry = buildChallengeEntry({ locale, gameId, score, timeMs, timeKind });
+    const entry = buildChallengeEntry({ gameId, score, timeMs, timeKind, playerName: getStoredPlayerName() });
     if (gameId === "decision") {
       void submitFeaturedAttempt(entry);
       return;
@@ -105,7 +111,25 @@ export default function Home() {
   };
 
   const handleStartGame = (gameId: GameId) => {
+    if (!isValidPlayerName(getStoredPlayerName())) {
+      setPendingGame(gameId);
+      setIsPlayerNameModalOpen(true);
+      return;
+    }
+
     setActiveGame(gameId);
+  };
+
+  const handlePlayerNameClose = () => {
+    setPendingGame(null);
+    setIsPlayerNameModalOpen(false);
+  };
+
+  const handlePlayerNameConfirm = (playerName: string) => {
+    setStoredPlayerName(playerName);
+    setIsPlayerNameModalOpen(false);
+    setActiveGame(pendingGame);
+    setPendingGame(null);
   };
 
   const handleGameDone = () => {
@@ -271,6 +295,14 @@ export default function Home() {
           </motion.section>
         )}
       </AnimatePresence>
+
+      <PlayerNameModal
+        key={`player-name-${isPlayerNameModalOpen ? pendingGame ?? "none" : "closed"}`}
+        locale={locale}
+        open={isPlayerNameModalOpen}
+        onClose={handlePlayerNameClose}
+        onConfirm={handlePlayerNameConfirm}
+      />
 
       {!inGame && section === "test" && testStage === "home" && (
         <footer className="relative z-10 mx-auto max-w-6xl px-5 pb-10 text-center text-sm text-slate-400 sm:px-8">

@@ -57,9 +57,11 @@ export const GAME_META: Record<GameId, { name: LocalizedText; icon: string; acce
   },
 };
 
-const PLAYER_KEY = "mirrormind_player_v1";
+const PLAYER_KEY = "mirrormind_player_name";
+const LEGACY_PLAYER_KEYS = ["mirrormind_player_v1"];
 const ATTEMPTS_KEY = "mirrormind_attempts_v2";
-const MAX_NAME_LENGTH = 20;
+export const MIN_PLAYER_NAME_LENGTH = 2;
+export const MAX_PLAYER_NAME_LENGTH = 20;
 const MAX_ATTEMPTS = 180;
 
 const dayMs = 24 * 60 * 60 * 1000;
@@ -71,26 +73,51 @@ export const sanitizeDisplayName = (value: string): string => {
     .replace(/\s+/g, " ")
     .trim();
 
-  return Array.from(clean).slice(0, MAX_NAME_LENGTH).join("");
+  return Array.from(clean).slice(0, MAX_PLAYER_NAME_LENGTH).join("");
 };
 
-export const getFallbackDisplayName = (locale: "ar" | "en") =>
-  locale === "ar" ? "لاعب MirrorMind" : "MirrorMind Player";
+export const isValidPlayerName = (value: string) =>
+  sanitizeDisplayName(value).length >= MIN_PLAYER_NAME_LENGTH;
 
 export const getStoredPlayerName = (): string => {
   if (typeof window === "undefined") return "";
-  return sanitizeDisplayName(localStorage.getItem(PLAYER_KEY) ?? "");
+
+  const keys = [PLAYER_KEY, ...LEGACY_PLAYER_KEYS];
+  for (const key of keys) {
+    const rawValue = localStorage.getItem(key);
+    const sanitized = sanitizeDisplayName(rawValue ?? "");
+
+    if (!isValidPlayerName(sanitized)) {
+      if (rawValue) {
+        localStorage.removeItem(key);
+      }
+      continue;
+    }
+
+    if (key !== PLAYER_KEY) {
+      localStorage.setItem(PLAYER_KEY, sanitized);
+      localStorage.removeItem(key);
+    }
+
+    return sanitized;
+  }
+
+  return "";
 };
 
-export const resolvePlayerName = (locale: "ar" | "en", rawName?: string) => {
-  const preferred = sanitizeDisplayName(rawName ?? getStoredPlayerName());
-  return preferred || getFallbackDisplayName(locale);
+export const requirePlayerName = (rawName?: string) => {
+  const sanitized = sanitizeDisplayName(rawName ?? getStoredPlayerName());
+  if (!isValidPlayerName(sanitized)) {
+    throw new Error("Player name is required");
+  }
+
+  return sanitized;
 };
 
 export const setStoredPlayerName = (value: string) => {
   if (typeof window === "undefined") return;
   const sanitized = sanitizeDisplayName(value);
-  if (sanitized) {
+  if (isValidPlayerName(sanitized)) {
     localStorage.setItem(PLAYER_KEY, sanitized);
     return;
   }
@@ -171,14 +198,13 @@ export const saveLocalAttempt = (entry: ChallengeEntry) => {
 };
 
 export const buildChallengeEntry = (params: {
-  locale: "ar" | "en";
   gameId: GameId;
   score: number;
   timeMs: number | null;
   timeKind: TimeKind;
   playerName?: string;
 }) => {
-  const playerName = resolvePlayerName(params.locale, params.playerName);
+  const playerName = requirePlayerName(params.playerName);
   return {
     id: `${params.gameId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     gameId: params.gameId,
