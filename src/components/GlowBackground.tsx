@@ -38,6 +38,8 @@ export function GlowBackground() {
       />
 
       <div className="mirrormind-particles absolute inset-0 opacity-60" />
+      <div className="mirrormind-particles-2 absolute inset-0 opacity-40" />
+      <div className="scan-overlay absolute inset-0 opacity-100" />
     </div>
   );
 }

@@ -23,7 +23,7 @@ export function ProgressBar({ current, total, locale }: ProgressBarProps) {
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700/40">
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-300"
+          className="progress-bar-animated h-full rounded-full"
           animate={{ width: `${value}%` }}
           transition={{ duration: 0.45, ease: "easeOut" }}
         />

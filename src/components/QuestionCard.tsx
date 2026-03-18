@@ -69,7 +69,7 @@ export function QuestionCard({ question, index, total, locale, onAnswer }: Quest
                 whileHover={selected === null ? { scale: 1.015, y: -2 } : {}}
                 whileTap={selected === null ? { scale: 0.985 } : {}}
                 className={[
-                  "w-full rounded-2xl border px-6 py-5 text-start text-sm leading-relaxed transition-colors duration-200 sm:text-base",
+                  "w-full rounded-2xl border px-6 py-5 text-start text-sm leading-relaxed transition-colors duration-200 sm:text-base card-hover-glow",
                   isSelected
                     ? "border-cyan-400/60 bg-cyan-500/20 text-white shadow-[0_0_24px_rgba(34,211,238,0.18)]"
                     : "border-slate-500/35 bg-slate-800/55 text-slate-100 hover:border-cyan-300/50 hover:bg-slate-700/65 hover:text-white",

@@ -5,22 +5,35 @@ import { AnimatePresence, motion } from "framer-motion";
 import { GlowBackground } from "@/components/GlowBackground";
 import { HeroSection } from "@/components/HeroSection";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { MindGamesHub } from "@/components/MindGamesHub";
+import { MindProfile } from "@/components/MindProfile";
+import { Navigation } from "@/components/Navigation";
 import { PersonalitySummary } from "@/components/PersonalitySummary";
 import { QuestionCard } from "@/components/QuestionCard";
 import { ResultCard } from "@/components/ResultCard";
 import { TraitMeter } from "@/components/TraitMeter";
+import { DecisionSpeed } from "@/components/games/DecisionSpeed";
+import { FocusChallenge } from "@/components/games/FocusChallenge";
+import { IntuitionTest } from "@/components/games/IntuitionTest";
+import { MemoryFlash } from "@/components/games/MemoryFlash";
+import { RiskOrSafe } from "@/components/games/RiskOrSafe";
 import { QUESTIONS } from "@/data/questions";
 import { DEFAULT_LOCALE, localeDirection, t, type Locale, uiCopy } from "@/lib/i18n";
+import { saveScore } from "@/lib/gameScores";
 import { getPersonalityResult } from "@/lib/scoreEngine";
 
-type Stage = "home" | "test" | "result";
+type NavSection = "test" | "games" | "profile";
+type TestStage = "home" | "test" | "result";
+type ActiveGame = "decision" | "memory" | "risk" | "intuition" | "focus" | null;
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
-  const [stage, setStage] = useState<Stage>("home");
+  const [section, setSection] = useState<NavSection>("test");
+  const [testStage, setTestStage] = useState<TestStage>("home");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [isResultReady, setIsResultReady] = useState(false);
+  const [activeGame, setActiveGame] = useState<ActiveGame>(null);
 
   const currentQuestion = QUESTIONS[currentQuestionIndex];
   const result = useMemo(() => getPersonalityResult(answers), [answers]);
@@ -30,41 +43,92 @@ export default function Home() {
     document.documentElement.dir = localeDirection(locale);
   }, [locale]);
 
+  // Save personality result to localStorage when ready
+  useEffect(() => {
+    if (isResultReady) {
+      saveScore("personalityType", result.typeId);
+      saveScore("personalityName", result.profile.name);
+    }
+  }, [isResultReady, result]);
+
   const handleStart = () => {
     setAnswers([]);
     setCurrentQuestionIndex(0);
     setIsResultReady(false);
-    setStage("test");
+    setTestStage("test");
   };
 
   const handleAnswer = (optionIndex: number) => {
-    setAnswers((prevAnswers) => {
-      const nextAnswers = [...prevAnswers];
-      nextAnswers[currentQuestionIndex] = optionIndex;
-      return nextAnswers;
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[currentQuestionIndex] = optionIndex;
+      return next;
     });
 
     const isLastQuestion = currentQuestionIndex === QUESTIONS.length - 1;
-
     if (isLastQuestion) {
       setTimeout(() => {
-        setStage("result");
+        setTestStage("result");
         setIsResultReady(true);
       }, 220);
       return;
     }
-
-    setTimeout(() => {
-      setCurrentQuestionIndex((prev) => prev + 1);
-    }, 180);
+    setTimeout(() => setCurrentQuestionIndex((p) => p + 1), 180);
   };
 
   const handleRetake = () => {
     setAnswers([]);
     setCurrentQuestionIndex(0);
     setIsResultReady(false);
-    setStage("test");
+    setTestStage("test");
   };
+
+  const handleNavigate = (s: NavSection) => {
+    setSection(s);
+    setActiveGame(null);
+  };
+
+  const handleStartGame = (gameId: string) => {
+    setActiveGame(gameId as ActiveGame);
+  };
+
+  const handleGameDone = () => {
+    setActiveGame(null);
+    setSection("profile");
+  };
+
+  const handleDecisionDone = (style: import("@/lib/gameScores").DecisionStyle, score: number) => {
+    saveScore("decisionStyle", style);
+    saveScore("decisionScore", score);
+    handleGameDone();
+  };
+
+  const handleMemoryDone = (score: number) => {
+    saveScore("memoryScore", score);
+    handleGameDone();
+  };
+
+  const handleRiskDone = (score: number) => {
+    saveScore("riskScore", score);
+    handleGameDone();
+  };
+
+  const handleIntuitionDone = (score: number) => {
+    saveScore("intuitionScore", score);
+    handleGameDone();
+  };
+
+  const handleFocusDone = (score: number) => {
+    saveScore("focusScore", score);
+    handleGameDone();
+  };
+
+  const handleGameBack = () => {
+    setActiveGame(null);
+  };
+
+  // During a game, show a minimal layout
+  const inGame = activeGame !== null;
 
   return (
     <main className="mirrormind-bg relative min-h-[100dvh] overflow-hidden" dir={localeDirection(locale)}>
@@ -77,12 +141,53 @@ export default function Home() {
         <LanguageSwitcher locale={locale} onToggle={setLocale} />
       </header>
 
-      <AnimatePresence mode="wait" initial={false}>
-        {stage === "home" && <HeroSection key={`hero-${locale}`} locale={locale} onStart={handleStart} />}
+      {!inGame && (
+        <div className="relative z-20 pb-2">
+          <Navigation locale={locale} active={section} onNavigate={handleNavigate} />
+        </div>
+      )}
 
-        {stage === "test" && currentQuestion && (
+      <AnimatePresence mode="wait" initial={false}>
+        {/* ── Active game ────────────────────────────────────────── */}
+        {inGame && activeGame === "decision" && (
+          <DecisionSpeed key="game-decision" locale={locale} onComplete={handleDecisionDone} onBack={handleGameBack} />
+        )}
+        {inGame && activeGame === "memory" && (
+          <MemoryFlash key="game-memory" locale={locale} onComplete={handleMemoryDone} onBack={handleGameBack} />
+        )}
+        {inGame && activeGame === "risk" && (
+          <RiskOrSafe key="game-risk" locale={locale} onComplete={handleRiskDone} onBack={handleGameBack} />
+        )}
+        {inGame && activeGame === "intuition" && (
+          <IntuitionTest key="game-intuition" locale={locale} onComplete={handleIntuitionDone} onBack={handleGameBack} />
+        )}
+        {inGame && activeGame === "focus" && (
+          <FocusChallenge key="game-focus" locale={locale} onComplete={handleFocusDone} onBack={handleGameBack} />
+        )}
+
+        {/* ── Mind Games Hub ─────────────────────────────────────── */}
+        {!inGame && section === "games" && (
+          <MindGamesHub key="games-hub" locale={locale} onStartGame={handleStartGame} />
+        )}
+
+        {/* ── Profile ───────────────────────────────────────────── */}
+        {!inGame && section === "profile" && (
+          <MindProfile
+            key="profile"
+            locale={locale}
+            onGoToGames={() => handleNavigate("games")}
+            onGoToTest={() => handleNavigate("test")}
+          />
+        )}
+
+        {/* ── Personality Test ──────────────────────────────────── */}
+        {!inGame && section === "test" && testStage === "home" && (
+          <HeroSection key={`hero-${locale}`} locale={locale} onStart={handleStart} />
+        )}
+
+        {!inGame && section === "test" && testStage === "test" && currentQuestion && (
           <QuestionCard
-            key={currentQuestion.id}
+            key={`q-${currentQuestion.id}`}
             question={currentQuestion}
             index={currentQuestionIndex}
             total={QUESTIONS.length}
@@ -91,14 +196,14 @@ export default function Home() {
           />
         )}
 
-        {stage === "result" && (
+        {!inGame && section === "test" && testStage === "result" && (
           <motion.section
             key="result"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl items-center px-5 py-24 sm:px-8"
+            className="relative z-10 mx-auto flex min-h-[calc(100dvh-120px)] w-full max-w-6xl items-start px-5 py-10 sm:px-8"
           >
             <div className="grid w-full gap-6 lg:grid-cols-[1.25fr_1fr]">
               <div className="space-y-6">
@@ -117,15 +222,24 @@ export default function Home() {
                   <p className="mt-4 text-sm text-slate-300">{uiCopy.loading[locale]}</p>
                 ) : (
                   <div className="mt-5 space-y-5">
-                    {(Object.keys(result.scores) as (keyof typeof result.scores)[]).map((dimension, index) => (
+                    {(Object.keys(result.scores) as (keyof typeof result.scores)[]).map((dimension, idx) => (
                       <TraitMeter
                         key={dimension}
                         label={t(result.labels[dimension], locale)}
                         value={result.scores[dimension]}
-                        delay={index * 0.08}
+                        delay={idx * 0.08}
                       />
                     ))}
                   </div>
+                )}
+                {isResultReady && (
+                  <button
+                    type="button"
+                    onClick={() => handleNavigate("games")}
+                    className="mt-6 w-full rounded-2xl border border-violet-300/30 bg-violet-500/15 py-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-500/25"
+                  >
+                    🎮 {locale === "ar" ? "جرّب الألعاب الذهنية" : "Try Mind Games"}
+                  </button>
                 )}
               </section>
             </div>
@@ -133,7 +247,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {stage === "home" && (
+      {!inGame && section === "test" && testStage === "home" && (
         <footer className="relative z-10 mx-auto max-w-6xl px-5 pb-10 text-center text-sm text-slate-400 sm:px-8">
           {uiCopy.footer[locale]}
         </footer>
@@ -141,3 +255,4 @@ export default function Home() {
     </main>
   );
 }
+
