@@ -1,29 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #05070e;
-  --foreground: #eef2ff;
+  --background: #05070f;
+  --foreground: #f1f5ff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-cairo);
+  --font-alt: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  min-height: 100vh;
+  font-family: var(--font-cairo), var(--font-inter), system-ui, sans-serif;
+  min-height: 100dvh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -34,30 +29,38 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 20% 15%, rgb(168 85 247 / 0.18), transparent 28%),
-    radial-gradient(circle at 80% 25%, rgb(56 189 248 / 0.18), transparent 32%),
-    radial-gradient(circle at 45% 80%, rgb(99 102 241 / 0.2), transparent 35%),
-    linear-gradient(130deg, #040612 0%, #080d1e 46%, #040915 100%);
+    radial-gradient(circle at 18% 12%, rgb(56 189 248 / 0.11), transparent 22%),
+    radial-gradient(circle at 84% 24%, rgb(168 85 247 / 0.12), transparent 28%),
+    radial-gradient(circle at 50% 84%, rgb(14 165 233 / 0.12), transparent 32%),
+    linear-gradient(135deg, #040613 0%, #050a1d 45%, #030711 100%);
 }
 
-.mirrormind-bg::before,
-.mirrormind-bg::after {
-  content: "";
-  position: absolute;
-  inset: -35%;
-  pointer-events: none;
-  border-radius: 9999px;
-  filter: blur(64px);
+
+.mirrormind-particles {
+  background-image:
+    radial-gradient(circle at 20% 40%, rgb(165 180 252 / 0.65) 0.8px, transparent 1px),
+    radial-gradient(circle at 68% 20%, rgb(103 232 249 / 0.55) 1px, transparent 1.1px),
+    radial-gradient(circle at 40% 75%, rgb(196 181 253 / 0.45) 0.8px, transparent 1px),
+    radial-gradient(circle at 78% 64%, rgb(125 211 252 / 0.45) 1px, transparent 1.1px);
+  background-size: 220px 220px, 270px 270px, 310px 310px, 260px 260px;
+  animation: particles-drift 26s linear infinite;
 }
 
-.mirrormind-bg::before {
-  background: radial-gradient(circle, rgb(129 140 248 / 0.2) 0%, transparent 58%);
-  animation: float-glow 16s ease-in-out infinite;
+html[dir="rtl"] .text-start {
+  text-align: right;
 }
 
-.mirrormind-bg::after {
-  background: radial-gradient(circle, rgb(16 185 129 / 0.12) 0%, transparent 62%);
-  animation: float-glow 20s ease-in-out infinite reverse;
+html[dir="ltr"] .text-start {
+  text-align: left;
+}
+
+@keyframes particles-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-22px, -26px, 0);
+  }
 }
 
 @keyframes float-glow {
@@ -67,5 +70,11 @@ body {
   }
   50% {
     transform: translate3d(7%, 6%, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mirrormind-particles {
+    animation: none;
   }
 }

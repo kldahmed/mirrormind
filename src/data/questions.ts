@@ -2,285 +2,470 @@ export type DimensionKey = "logic" | "creativity" | "empathy" | "risk";
 
 export type DimensionImpact = Record<DimensionKey, number>;
 
+export type LocalizedText = {
+  ar: string;
+  en: string;
+};
+
 export type QuestionOption = {
-  text: string;
+  text: LocalizedText;
   impact: DimensionImpact;
 };
 
 export type Question = {
   id: number;
-  prompt: string;
+  prompt: LocalizedText;
   options: QuestionOption[];
 };
 
-export const DIMENSION_LABELS: Record<DimensionKey, string> = {
-  logic: "Logic",
-  creativity: "Creativity",
-  empathy: "Empathy",
-  risk: "Risk",
+export const DIMENSION_LABELS: Record<DimensionKey, LocalizedText> = {
+  logic: { ar: "المنطق", en: "Logic" },
+  creativity: { ar: "الإبداع", en: "Creativity" },
+  empathy: { ar: "التعاطف", en: "Empathy" },
+  risk: { ar: "الجرأة", en: "Risk" },
 };
 
 export const QUESTIONS: Question[] = [
   {
     id: 1,
-    prompt: "A critical project suddenly changes direction. Your first move is to:",
+    prompt: {
+      ar: "تغيّر مسار مشروع مهم بشكل مفاجئ. ما أول خطوة تقوم بها؟",
+      en: "A critical project suddenly changes direction. Your first move is:",
+    },
     options: [
       {
-        text: "Map new constraints and re-plan the system before acting.",
+        text: {
+          ar: "أرسم القيود الجديدة وأعيد تخطيط النظام قبل التنفيذ.",
+          en: "Map new constraints and re-plan the system before acting.",
+        },
         impact: { logic: 5, creativity: 2, empathy: 1, risk: 2 },
       },
       {
-        text: "Sketch three bold alternatives and pitch the strongest vision.",
+        text: {
+          ar: "أقترح ثلاث بدائل جريئة وأدفع بأقوى رؤية.",
+          en: "Sketch three bold alternatives and pitch the strongest vision.",
+        },
         impact: { logic: 2, creativity: 5, empathy: 2, risk: 3 },
       },
       {
-        text: "Check team morale and align people before touching execution.",
+        text: {
+          ar: "أراجع حالة الفريق وأوحده قبل أي تنفيذ.",
+          en: "Check team morale and align people before touching execution.",
+        },
         impact: { logic: 1, creativity: 2, empathy: 5, risk: 1 },
       },
       {
-        text: "Move fast with a live experiment and adjust from real feedback.",
+        text: {
+          ar: "أتحرك بسرعة بتجربة حية ثم أضبط المسار من النتائج الواقعية.",
+          en: "Move fast with a live experiment and adjust from real feedback.",
+        },
         impact: { logic: 2, creativity: 3, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 2,
-    prompt: "When learning something new, you absorb it best by:",
+    prompt: {
+      ar: "عند تعلم شيء جديد، ما الأسلوب الذي تستوعب به أسرع؟",
+      en: "When learning something new, you absorb it best by:",
+    },
     options: [
       {
-        text: "Breaking it into principles and understanding the model.",
+        text: {
+          ar: "تفكيكه إلى مبادئ وفهم النموذج الذي يحكمه.",
+          en: "Breaking it into principles and understanding the model.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 1, risk: 1 },
       },
       {
-        text: "Turning ideas into metaphors, visuals, and prototypes.",
+        text: {
+          ar: "تحويل الأفكار إلى صور ذهنية ونماذج أولية.",
+          en: "Turning ideas into metaphors, visuals, and prototypes.",
+        },
         impact: { logic: 1, creativity: 5, empathy: 2, risk: 2 },
       },
       {
-        text: "Discussing it deeply with others and sensing perspective shifts.",
+        text: {
+          ar: "نقاشه بعمق مع الآخرين والتقاط تغير وجهات النظر.",
+          en: "Discussing it deeply with others and sensing perspective shifts.",
+        },
         impact: { logic: 1, creativity: 2, empathy: 5, risk: 1 },
       },
       {
-        text: "Jumping in immediately and learning through uncertainty.",
+        text: {
+          ar: "الدخول مباشرة والتعلم عبر عدم اليقين.",
+          en: "Jumping in immediately and learning through uncertainty.",
+        },
         impact: { logic: 2, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 3,
-    prompt: "In group decisions, people rely on you for:",
+    prompt: {
+      ar: "في القرارات الجماعية، يعتمد عليك الناس غالبًا من أجل:",
+      en: "In group decisions, people rely on you for:",
+    },
     options: [
       {
-        text: "Clarity, evidence, and a clean decision framework.",
+        text: {
+          ar: "الوضوح والأدلة وإطار قرار منظم.",
+          en: "Clarity, evidence, and a clean decision framework.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 2, risk: 1 },
       },
       {
-        text: "Unexpected concepts that unlock a new direction.",
+        text: {
+          ar: "أفكار غير متوقعة تفتح اتجاهًا جديدًا.",
+          en: "Unexpected concepts that unlock a new direction.",
+        },
         impact: { logic: 2, creativity: 5, empathy: 1, risk: 3 },
       },
       {
-        text: "The ability to harmonize conflict and include every voice.",
+        text: {
+          ar: "تناغم الآراء المتعارضة واحتواء كل صوت.",
+          en: "The ability to harmonize conflict and include every voice.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "Your courage to commit when others hesitate.",
+        text: {
+          ar: "الجرأة على الحسم عندما يتردد الآخرون.",
+          en: "Your courage to commit when others hesitate.",
+        },
         impact: { logic: 2, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 4,
-    prompt: "A weekend with no obligations sounds most appealing if you:",
+    prompt: {
+      ar: "عطلة نهاية أسبوع بلا التزامات تبدو مثالية إذا كنت:",
+      en: "A weekend with no obligations sounds most appealing if you:",
+    },
     options: [
       {
-        text: "Deep-dive into strategy games, systems, or long-form analysis.",
+        text: {
+          ar: "تغوص في ألعاب استراتيجية أو تحليل عميق طويل.",
+          en: "Deep-dive into strategy games, systems, or long-form analysis.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 1, risk: 1 },
       },
       {
-        text: "Build something expressive: writing, design, or sound.",
+        text: {
+          ar: "تبني شيئًا تعبيريًا: كتابة، تصميم، أو صوت.",
+          en: "Build something expressive: writing, design, or sound.",
+        },
         impact: { logic: 1, creativity: 5, empathy: 2, risk: 2 },
       },
       {
-        text: "Reconnect with friends and meaningful one-on-one moments.",
+        text: {
+          ar: "تستعيد قربك من الأصدقاء ولحظات إنسانية عميقة.",
+          en: "Reconnect with friends and meaningful one-on-one moments.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "Take an unplanned trip and follow pure instinct.",
+        text: {
+          ar: "تخوض رحلة غير مخطط لها وتتبع حدسك بالكامل.",
+          en: "Take an unplanned trip and follow pure instinct.",
+        },
         impact: { logic: 1, creativity: 3, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 5,
-    prompt: "What best describes your relationship with failure?",
+    prompt: {
+      ar: "ما الوصف الأقرب لعلاقتك مع الفشل؟",
+      en: "What best describes your relationship with failure?",
+    },
     options: [
       {
-        text: "A signal to improve the model and reduce future error.",
+        text: {
+          ar: "إشارة لتحسين النموذج وتقليل الخطأ مستقبلًا.",
+          en: "A signal to improve the model and reduce future error.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 1, risk: 2 },
       },
       {
-        text: "A remix point that often leads to better ideas.",
+        text: {
+          ar: "نقطة إعادة تشكيل غالبًا تقود لأفكار أفضل.",
+          en: "A remix point that often leads to better ideas.",
+        },
         impact: { logic: 1, creativity: 5, empathy: 2, risk: 3 },
       },
       {
-        text: "A human moment that deserves reflection and compassion.",
+        text: {
+          ar: "لحظة إنسانية تستحق التأمل والتعاطف.",
+          en: "A human moment that deserves reflection and compassion.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "The cost of playing big; I recover quickly and push on.",
+        text: {
+          ar: "ثمن طبيعي للمحاولات الكبيرة؛ أتعافى بسرعة وأتابع.",
+          en: "The cost of playing big; I recover quickly and push on.",
+        },
         impact: { logic: 2, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 6,
-    prompt: "When conflict appears, your instinct is to:",
+    prompt: {
+      ar: "عندما يظهر خلاف، ما رد فعلك التلقائي؟",
+      en: "When conflict appears, your instinct is to:",
+    },
     options: [
       {
-        text: "Isolate the facts and resolve the root contradiction.",
+        text: {
+          ar: "أفصل الحقائق وأحل التناقض من جذوره.",
+          en: "Isolate the facts and resolve the root contradiction.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 2, risk: 2 },
       },
       {
-        text: "Reframe the situation and search for a third option.",
+        text: {
+          ar: "أعيد تأطير الموقف وأبحث عن خيار ثالث.",
+          en: "Reframe the situation and search for a third option.",
+        },
         impact: { logic: 2, creativity: 5, empathy: 2, risk: 3 },
       },
       {
-        text: "Read emotional subtext and de-escalate with care.",
+        text: {
+          ar: "أقرأ البعد العاطفي وأهدّئ التصعيد بعناية.",
+          en: "Read emotional subtext and de-escalate with care.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "Address it directly and decisively before it grows.",
+        text: {
+          ar: "أواجهه مباشرة وبحسم قبل أن يتفاقم.",
+          en: "Address it directly and decisively before it grows.",
+        },
         impact: { logic: 2, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 7,
-    prompt: "Your ideal work environment is:",
+    prompt: {
+      ar: "بيئة العمل المثالية لك هي:",
+      en: "Your ideal work environment is:",
+    },
     options: [
       {
-        text: "Structured, focused, and rich with measurable goals.",
+        text: {
+          ar: "منظمة، مركزة، ومليئة بأهداف قابلة للقياس.",
+          en: "Structured, focused, and rich with measurable goals.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 1, risk: 1 },
       },
       {
-        text: "Flexible, imaginative, and open to wild exploration.",
+        text: {
+          ar: "مرنة، خيالية، ومفتوحة للاستكشاف الجريء.",
+          en: "Flexible, imaginative, and open to wild exploration.",
+        },
         impact: { logic: 1, creativity: 5, empathy: 2, risk: 3 },
       },
       {
-        text: "Supportive, collaborative, and people-centered.",
+        text: {
+          ar: "داعمة، تعاونية، وتضع الإنسان في المركز.",
+          en: "Supportive, collaborative, and people-centered.",
+        },
         impact: { logic: 1, creativity: 2, empathy: 5, risk: 1 },
       },
       {
-        text: "Fast-paced, high-stakes, and full of bold bets.",
+        text: {
+          ar: "سريعة الإيقاع، عالية المخاطرة، ومليئة بالرهانات الجريئة.",
+          en: "Fast-paced, high-stakes, and full of bold bets.",
+        },
         impact: { logic: 2, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 8,
-    prompt: "A difficult decision must be made quickly. You prioritize:",
+    prompt: {
+      ar: "قرار صعب يجب اتخاذه بسرعة. ما أولويتك؟",
+      en: "A difficult decision must be made quickly. You prioritize:",
+    },
     options: [
       {
-        text: "Expected value and long-term consequence modeling.",
+        text: {
+          ar: "القيمة المتوقعة وتأثيرات المدى الطويل.",
+          en: "Expected value and long-term consequence modeling.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 1, risk: 2 },
       },
       {
-        text: "Novel upside that others might overlook.",
+        text: {
+          ar: "فرصة مبتكرة قد لا يلاحظها الآخرون.",
+          en: "Novel upside that others might overlook.",
+        },
         impact: { logic: 2, creativity: 5, empathy: 1, risk: 3 },
       },
       {
-        text: "Human impact and preserving trust first.",
+        text: {
+          ar: "الأثر الإنساني والحفاظ على الثقة أولًا.",
+          en: "Human impact and preserving trust first.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "Momentum: act now, tune later with real outcomes.",
+        text: {
+          ar: "الزخم: تحرك الآن واضبط لاحقًا حسب النتائج.",
+          en: "Momentum: act now, tune later with real outcomes.",
+        },
         impact: { logic: 2, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 9,
-    prompt: "Which compliment feels most accurate to you?",
+    prompt: {
+      ar: "أي مديح تشعر أنه يصفك بدقة أكبر؟",
+      en: "Which compliment feels most accurate to you?",
+    },
     options: [
       {
-        text: "You think with sharp precision.",
+        text: {
+          ar: "تفكر بدقة حادة.",
+          en: "You think with sharp precision.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 1, risk: 1 },
       },
       {
-        text: "You see possibilities before anyone else.",
+        text: {
+          ar: "ترى الإمكانات قبل أي شخص آخر.",
+          en: "You see possibilities before anyone else.",
+        },
         impact: { logic: 1, creativity: 5, empathy: 1, risk: 3 },
       },
       {
-        text: "You make people feel truly understood.",
+        text: {
+          ar: "تجعل الناس يشعرون بأنهم مفهومون بصدق.",
+          en: "You make people feel truly understood.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "You are fearless when it matters.",
+        text: {
+          ar: "أنت جريء عندما يحين الوقت الحاسم.",
+          en: "You are fearless when it matters.",
+        },
         impact: { logic: 1, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 10,
-    prompt: "When facing ambiguity, you are most likely to:",
+    prompt: {
+      ar: "عند مواجهة الغموض، ما السلوك الأقرب لك؟",
+      en: "When facing ambiguity, you are most likely to:",
+    },
     options: [
       {
-        text: "Reduce uncertainty with models, data, and assumptions.",
+        text: {
+          ar: "أخفض عدم اليقين عبر النماذج والبيانات والافتراضات.",
+          en: "Reduce uncertainty with models, data, and assumptions.",
+        },
         impact: { logic: 5, creativity: 1, empathy: 1, risk: 2 },
       },
       {
-        text: "Use imagination to design several compelling futures.",
+        text: {
+          ar: "أستخدم الخيال لتصميم عدة مستقبلات مقنعة.",
+          en: "Use imagination to design several compelling futures.",
+        },
         impact: { logic: 2, creativity: 5, empathy: 1, risk: 3 },
       },
       {
-        text: "Talk to people impacted and calibrate to lived reality.",
+        text: {
+          ar: "أتحدث مع المتأثرين وأعاير القرار مع الواقع المعيش.",
+          en: "Talk to people impacted and calibrate to lived reality.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "Treat uncertainty as opportunity and move anyway.",
+        text: {
+          ar: "أتعامل مع عدم اليقين كفرصة وأتحرك رغم ذلك.",
+          en: "Treat uncertainty as opportunity and move anyway.",
+        },
         impact: { logic: 1, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 11,
-    prompt: "Your energy spikes most when you are:",
+    prompt: {
+      ar: "ترتفع طاقتك أكثر عندما تكون:",
+      en: "Your energy spikes most when you are:",
+    },
     options: [
       {
-        text: "Solving a complex puzzle no one else has cracked.",
+        text: {
+          ar: "تحل لغزًا معقدًا لم يستطع غيرك تفكيكه.",
+          en: "Solving a complex puzzle no one else has cracked.",
+        },
         impact: { logic: 5, creativity: 2, empathy: 1, risk: 2 },
       },
       {
-        text: "Inventing original concepts and shaping future narratives.",
+        text: {
+          ar: "تبتكر مفاهيم أصلية وتعيد تشكيل سرديات المستقبل.",
+          en: "Inventing original concepts and shaping future narratives.",
+        },
         impact: { logic: 1, creativity: 5, empathy: 2, risk: 3 },
       },
       {
-        text: "Helping someone transform through honest conversation.",
+        text: {
+          ar: "تساعد شخصًا على التحول عبر حوار صادق.",
+          en: "Helping someone transform through honest conversation.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "Leaping into uncertain territory with real stakes.",
+        text: {
+          ar: "تقفز إلى منطقة مجهولة فيها رهانات حقيقية.",
+          en: "Leaping into uncertain territory with real stakes.",
+        },
         impact: { logic: 2, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
   },
   {
     id: 12,
-    prompt: "At your best, your decision style feels like:",
+    prompt: {
+      ar: "في أفضل حالاتك، أسلوبك في اتخاذ القرار يبدو كأنه:",
+      en: "At your best, your decision style feels like:",
+    },
     options: [
       {
-        text: "A calculated sequence with elegant internal logic.",
+        text: {
+          ar: "تسلسل محسوب بمنطق داخلي أنيق.",
+          en: "A calculated sequence with elegant internal logic.",
+        },
         impact: { logic: 5, creativity: 2, empathy: 1, risk: 2 },
       },
       {
-        text: "A spark that turns into a breakthrough direction.",
+        text: {
+          ar: "شرارة تتحول إلى اتجاه اختراقي.",
+          en: "A spark that turns into a breakthrough direction.",
+        },
         impact: { logic: 1, creativity: 5, empathy: 2, risk: 3 },
       },
       {
-        text: "An intuitive read of people and what they need most.",
+        text: {
+          ar: "قراءة حدسية للناس وما يحتاجونه فعلًا.",
+          en: "An intuitive read of people and what they need most.",
+        },
         impact: { logic: 1, creativity: 1, empathy: 5, risk: 1 },
       },
       {
-        text: "A bold commitment that creates momentum for everyone.",
+        text: {
+          ar: "التزام جريء يصنع زخمًا للجميع.",
+          en: "A bold commitment that creates momentum for everyone.",
+        },
         impact: { logic: 2, creativity: 2, empathy: 1, risk: 5 },
       },
     ],
