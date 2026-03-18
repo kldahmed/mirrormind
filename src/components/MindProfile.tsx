@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FEATURED_GAME_ID,
-  fetchFeaturedLeaderboard,
+  fetchGlobalLeaderboard,
   filterEntriesByGame,
   formatScoreValue,
   formatTimeMetric,
   getFastestEntry,
-  getLocalAttempts,
   getPersonalBest,
+  getStoredPlayerName,
+  subscribeLeaderboardUpdates,
 } from "@/lib/challenge";
 import type { Locale } from "@/lib/i18n";
 import { computedMindScore, getScores, type MindScores } from "@/lib/gameScores";
@@ -72,14 +73,27 @@ function ScoreRing({ score, size = 96 }: { score: number; size?: number }) {
 export function MindProfile({ locale, onGoToGames, onGoToTest }: Props) {
   const [scores] = useState<MindScores | null>(() => getScores());
   const [featuredTopScore, setFeaturedTopScore] = useState<number | null>(null);
-  const [myFastestTime] = useState<number | null>(() => getFastestEntry(filterEntriesByGame(getLocalAttempts(), FEATURED_GAME_ID))?.timeMs ?? null);
-  const [myBestScore] = useState<number | null>(() => getPersonalBest(filterEntriesByGame(getLocalAttempts(), FEATURED_GAME_ID))?.score ?? null);
+  const [myFastestTime, setMyFastestTime] = useState<number | null>(null);
+  const [myBestScore, setMyBestScore] = useState<number | null>(null);
 
   useEffect(() => {
-    void fetchFeaturedLeaderboard().then((entries) => {
-      const top = getPersonalBest(entries);
-      setFeaturedTopScore(top?.score ?? null);
+    const refresh = async () => {
+      const entries = await fetchGlobalLeaderboard("all");
+      const featuredEntries = filterEntriesByGame(entries, FEATURED_GAME_ID);
+      const playerName = getStoredPlayerName();
+      const mine = featuredEntries.filter((entry) => entry.playerName === playerName);
+
+      setFeaturedTopScore(getPersonalBest(featuredEntries)?.score ?? null);
+      setMyFastestTime(getFastestEntry(mine)?.timeMs ?? null);
+      setMyBestScore(getPersonalBest(mine)?.score ?? null);
+    };
+
+    void refresh();
+    const unsubscribe = subscribeLeaderboardUpdates(() => {
+      void refresh();
     });
+
+    return unsubscribe;
   }, []);
 
   if (!scores) return null;

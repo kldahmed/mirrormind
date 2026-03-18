@@ -59,10 +59,9 @@ export const GAME_META: Record<GameId, { name: LocalizedText; icon: string; acce
 
 const PLAYER_KEY = "mirrormind_player_name";
 const LEGACY_PLAYER_KEYS = ["mirrormind_player_v1"];
-const ATTEMPTS_KEY = "mirrormind_attempts_v2";
 export const MIN_PLAYER_NAME_LENGTH = 2;
 export const MAX_PLAYER_NAME_LENGTH = 20;
-const MAX_ATTEMPTS = 180;
+const LEADERBOARD_UPDATED_EVENT = "mirrormind:leaderboard-updated";
 
 const dayMs = 24 * 60 * 60 * 1000;
 
@@ -177,24 +176,6 @@ const compareEntries = (left: ChallengeEntry, right: ChallengeEntry) => {
   if (left.timeMs === null && right.timeMs !== null) return 1;
   if (left.timeMs !== null && right.timeMs === null) return -1;
   return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
-};
-
-export const getLocalAttempts = (): ChallengeEntry[] => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(ATTEMPTS_KEY);
-    const parsed = raw ? (JSON.parse(raw) as ChallengeEntry[]) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-export const saveLocalAttempt = (entry: ChallengeEntry) => {
-  if (typeof window === "undefined") return;
-  const current = getLocalAttempts();
-  const next = [entry, ...current].slice(0, MAX_ATTEMPTS);
-  localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(next));
 };
 
 export const buildChallengeEntry = (params: {
@@ -339,27 +320,82 @@ export const buildShareText = (params: {
   return lines.join("\n");
 };
 
-export const fetchFeaturedLeaderboard = async () => {
+const mapApiEntry = (payload: {
+  id: string;
+  player_name: string;
+  score: number;
+  time: number | null;
+  game: string;
+  created_at: string;
+}): ChallengeEntry | null => {
+  if (!(payload.game in GAME_META)) {
+    return null;
+  }
+
+  const gameId = payload.game as GameId;
+  return {
+    id: payload.id,
+    gameId,
+    playerName: payload.player_name,
+    score: payload.score,
+    timeMs: payload.time,
+    timeKind: gameId === "decision" ? "reaction" : "time",
+    badge: getBadgeForScore(gameId, payload.score),
+    createdAt: payload.created_at,
+  } satisfies ChallengeEntry;
+};
+
+const emitLeaderboardUpdated = () => {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(LEADERBOARD_UPDATED_EVENT));
+};
+
+export const subscribeLeaderboardUpdates = (callback: () => void) => {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  const listener = () => callback();
+  window.addEventListener(LEADERBOARD_UPDATED_EVENT, listener);
+  return () => window.removeEventListener(LEADERBOARD_UPDATED_EVENT, listener);
+};
+
+export const fetchGlobalLeaderboard = async (scope: LeaderboardScope = "all") => {
   try {
-    const response = await fetch(`/api/challenge?gameId=${FEATURED_GAME_ID}`, { cache: "no-store" });
+    const response = await fetch(`/api/challenge?scope=${scope}`, { cache: "no-store" });
     if (!response.ok) throw new Error("Failed to load leaderboard");
-    const payload = (await response.json()) as { entries: ChallengeEntry[] };
-    return payload.entries;
+    const payload = (await response.json()) as {
+      entries: {
+        id: string;
+        player_name: string;
+        score: number;
+        time: number | null;
+        game: string;
+        created_at: string;
+      }[];
+    };
+
+    return payload.entries.map(mapApiEntry).filter((entry): entry is ChallengeEntry => entry !== null);
   } catch {
-    return filterEntriesByGame(getLocalAttempts(), FEATURED_GAME_ID);
+    return [];
   }
 };
 
-export const submitFeaturedAttempt = async (entry: ChallengeEntry) => {
-  saveLocalAttempt(entry);
-
+export const submitLeaderboardAttempt = async (entry: ChallengeEntry) => {
   try {
     await fetch("/api/challenge", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(entry),
+      body: JSON.stringify({
+        player_name: entry.playerName,
+        score: entry.score,
+        time: entry.timeMs,
+        game: entry.gameId,
+      }),
     });
   } catch {
-    // Local persistence is the durable fallback for the current client.
+    // Ignore network errors; UI still remains functional.
+  } finally {
+    emitLeaderboardUpdated();
   }
 };

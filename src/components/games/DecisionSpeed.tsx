@@ -5,11 +5,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ShareModal } from "@/components/ShareModal";
 import { DECISION_SCENARIOS, type DecisionScenario } from "@/data/gameData";
 import {
-  fetchFeaturedLeaderboard,
+  fetchGlobalLeaderboard,
   filterEntriesByGame,
   getBadgeForScore,
-  getLocalAttempts,
   getPersonalBest,
+  getStoredPlayerName,
   type ShareableResult,
 } from "@/lib/challenge";
 import type { DecisionStyle } from "@/lib/gameScores";
@@ -71,10 +71,14 @@ export function DecisionSpeed({ locale, onComplete, onBack }: DecisionSpeedProps
   const currentQ: DecisionScenario | undefined = DECISION_SCENARIOS[questionIndex];
 
   useEffect(() => {
-    const localBest = getPersonalBest(filterEntriesByGame(getLocalAttempts(), "decision"));
-    setPreviousBest(localBest ? { score: localBest.score, timeMs: localBest.timeMs } : null);
-    void fetchFeaturedLeaderboard().then((entries) => {
-      const top = getPersonalBest(entries);
+    const playerName = getStoredPlayerName();
+
+    void fetchGlobalLeaderboard("all").then((entries) => {
+      const decisionEntries = filterEntriesByGame(entries, "decision");
+      const localBest = getPersonalBest(decisionEntries.filter((entry) => entry.playerName === playerName));
+      setPreviousBest(localBest ? { score: localBest.score, timeMs: localBest.timeMs } : null);
+
+      const top = getPersonalBest(decisionEntries);
       setTopReference(top ? { score: top.score, timeMs: top.timeMs } : null);
     });
   }, []);

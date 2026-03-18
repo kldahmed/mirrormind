@@ -23,9 +23,8 @@ import {
   buildChallengeEntry,
   getStoredPlayerName,
   isValidPlayerName,
-  saveLocalAttempt,
   setStoredPlayerName,
-  submitFeaturedAttempt,
+  submitLeaderboardAttempt,
   type GameId,
   type TimeKind,
 } from "@/lib/challenge";
@@ -103,11 +102,7 @@ export default function Home() {
 
   const persistGameAttempt = (gameId: GameId, score: number, timeMs: number | null, timeKind: TimeKind) => {
     const entry = buildChallengeEntry({ gameId, score, timeMs, timeKind, playerName: getStoredPlayerName() });
-    if (gameId === "decision") {
-      void submitFeaturedAttempt(entry);
-      return;
-    }
-    saveLocalAttempt(entry);
+    void submitLeaderboardAttempt(entry);
   };
 
   const handleStartGame = (gameId: GameId) => {

@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n";
 import {
   FEATURED_GAME_ID,
   GAME_META,
-  fetchFeaturedLeaderboard,
+  fetchGlobalLeaderboard,
   filterEntriesByGame,
   filterEntriesByScope,
   formatScoreValue,
@@ -15,10 +15,10 @@ import {
   getDailyFeaturedGameId,
   getFastestEntry,
   getGapToLeader,
-  getLocalAttempts,
   getPersonalBest,
   getRankedEntries,
   getStoredPlayerName,
+  subscribeLeaderboardUpdates,
   toShareableResult,
   type ChallengeEntry,
   type GameId,
@@ -34,13 +34,22 @@ type FeaturedChallengeHubProps = {
 
 export function FeaturedChallengeHub({ locale, onStartGame }: FeaturedChallengeHubProps) {
   const [scope, setScope] = useState<LeaderboardScope>("today");
-  const [featuredEntries, setFeaturedEntries] = useState<ChallengeEntry[]>([]);
-  const [localEntries] = useState<ChallengeEntry[]>(() => getLocalAttempts());
+  const [leaderboardEntries, setLeaderboardEntries] = useState<ChallengeEntry[]>([]);
   const [shareTarget, setShareTarget] = useState<ShareableResult | null>(null);
   const [playerName, setPlayerName] = useState(() => getStoredPlayerName());
 
   useEffect(() => {
-    void fetchFeaturedLeaderboard().then((entries) => setFeaturedEntries(entries));
+    const refresh = async () => {
+      const entries = await fetchGlobalLeaderboard("all");
+      setLeaderboardEntries(entries);
+    };
+
+    void refresh();
+    const unsubscribe = subscribeLeaderboardUpdates(() => {
+      void refresh();
+    });
+
+    return unsubscribe;
   }, []);
 
   const handleCloseShare = () => {
@@ -48,26 +57,33 @@ export function FeaturedChallengeHub({ locale, onStartGame }: FeaturedChallengeH
     setPlayerName(getStoredPlayerName());
   };
 
-  const featuredLocal = useMemo(
-    () => filterEntriesByGame(localEntries, FEATURED_GAME_ID),
-    [localEntries],
+  const myEntries = useMemo(
+    () => leaderboardEntries.filter((entry) => entry.playerName === playerName),
+    [leaderboardEntries, playerName],
   );
-  const leaderboardSource = featuredEntries.length > 0 ? featuredEntries : featuredLocal;
+  const featuredAllEntries = useMemo(
+    () => filterEntriesByGame(leaderboardEntries, FEATURED_GAME_ID),
+    [leaderboardEntries],
+  );
+  const featuredMine = useMemo(
+    () => filterEntriesByGame(myEntries, FEATURED_GAME_ID),
+    [myEntries],
+  );
   const scopedEntries = useMemo(
-    () => filterEntriesByScope(leaderboardSource, scope),
-    [leaderboardSource, scope],
+    () => filterEntriesByScope(leaderboardEntries, scope),
+    [leaderboardEntries, scope],
   );
   const rankedEntries = useMemo(() => getRankedEntries(scopedEntries).slice(0, 8), [scopedEntries]);
-  const bestOverall = useMemo(() => getPersonalBest(leaderboardSource), [leaderboardSource]);
-  const fastestOverall = useMemo(() => getFastestEntry(leaderboardSource), [leaderboardSource]);
-  const myBestFeatured = useMemo(() => getPersonalBest(featuredLocal), [featuredLocal]);
-  const streak = useMemo(() => getConsecutiveDayStreak(featuredLocal), [featuredLocal]);
-  const gapToLeader = useMemo(() => getGapToLeader(leaderboardSource, myBestFeatured), [leaderboardSource, myBestFeatured]);
+  const bestOverall = useMemo(() => getPersonalBest(leaderboardEntries), [leaderboardEntries]);
+  const fastestOverall = useMemo(() => getFastestEntry(leaderboardEntries), [leaderboardEntries]);
+  const myBestFeatured = useMemo(() => getPersonalBest(featuredMine), [featuredMine]);
+  const streak = useMemo(() => getConsecutiveDayStreak(featuredMine), [featuredMine]);
+  const gapToLeader = useMemo(() => getGapToLeader(featuredAllEntries, myBestFeatured), [featuredAllEntries, myBestFeatured]);
 
   const dailyGameId = getDailyFeaturedGameId();
-  const dailyAttempts = filterEntriesByGame(localEntries, dailyGameId);
+  const dailyAttempts = filterEntriesByGame(leaderboardEntries, dailyGameId);
   const dailyTop = getPersonalBest(filterEntriesByScope(dailyAttempts, "today"));
-  const dailyMine = getPersonalBest(dailyAttempts);
+  const dailyMine = getPersonalBest(dailyAttempts.filter((entry) => entry.playerName === playerName));
 
   return (
     <div className="space-y-6">
@@ -234,7 +250,7 @@ export function FeaturedChallengeHub({ locale, onStartGame }: FeaturedChallengeH
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-slate-400">
-                    {locale === "ar" ? "التاريخ" : "Date"}: {new Date(entry.createdAt).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-GB")}
+                    {locale === "ar" ? "اللعبة" : "Game"}: {GAME_META[entry.gameId].name[locale]} · {locale === "ar" ? "التاريخ" : "Date"}: {new Date(entry.createdAt).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-GB")}
                   </p>
                 </div>
                 <div className="text-end">
