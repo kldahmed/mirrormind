@@ -9,6 +9,7 @@ import { saveScore } from "@/lib/gameScores";
 type Props = { locale: Locale; onDone: () => void; onBack: () => void };
 
 const TIMER_SECONDS = 3;
+const now = () => Date.now();
 
 const styleLabels: Record<DecisionType, { ar: string; en: string }> = {
   analytical: { ar: "المحلّل", en: "The Analyst" },
@@ -77,7 +78,7 @@ export function DecisionSpeedGame({ locale, onDone, onBack }: Props) {
   const [picks, setPicks] = useState<(DecisionType | "timeout")[]>([]);
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const [chosen, setChosen] = useState<number | null>(null);
-  const questionStartRef = useRef<number>(Date.now());
+  const questionStartRef = useRef<number>(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const advance = useCallback(
@@ -106,7 +107,7 @@ export function DecisionSpeedGame({ locale, onDone, onBack }: Props) {
           setChosen(null);
           setIndex((i) => i + 1);
           setTimer(TIMER_SECONDS);
-          questionStartRef.current = Date.now();
+          questionStartRef.current = now();
         }, 250);
       }
     },
@@ -117,13 +118,13 @@ export function DecisionSpeedGame({ locale, onDone, onBack }: Props) {
     if (chosen !== null) return;
     if (intervalRef.current) clearInterval(intervalRef.current);
     setChosen(optIdx);
-    const rt = Date.now() - questionStartRef.current;
+    const rt = now() - questionStartRef.current;
     advance(type, rt);
   };
 
   useEffect(() => {
     if (phase !== "playing") return;
-    questionStartRef.current = Date.now();
+    questionStartRef.current = now();
     intervalRef.current = setInterval(() => {
       setTimer((t) => {
         if (t <= 1) {

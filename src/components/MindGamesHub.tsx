@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { FeaturedChallengeHub } from "@/components/FeaturedChallengeHub";
+import type { GameId } from "@/lib/challenge";
 import type { Locale } from "@/lib/i18n";
 
 type Game = {
@@ -69,7 +71,7 @@ const GAMES: Game[] = [
 
 type MindGamesHubProps = {
   locale: Locale;
-  onStartGame: (gameId: string) => void;
+  onStartGame: (gameId: GameId) => void;
 };
 
 export function MindGamesHub({ locale, onStartGame }: MindGamesHubProps) {
@@ -95,12 +97,14 @@ export function MindGamesHub({ locale, onStartGame }: MindGamesHubProps) {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <FeaturedChallengeHub locale={locale} onStartGame={onStartGame} />
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {GAMES.map((game, i) => (
           <motion.button
             key={game.id}
             type="button"
-            onClick={() => onStartGame(game.id)}
+            onClick={() => onStartGame(game.id as GameId)}
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.07, ease: "easeOut" }}
@@ -110,6 +114,7 @@ export function MindGamesHub({ locale, onStartGame }: MindGamesHubProps) {
               "group relative overflow-hidden rounded-2xl border p-6 text-start transition-shadow duration-300",
               game.border,
               `bg-gradient-to-br ${game.color}`,
+              game.id === "decision" ? "ring-1 ring-amber-300/20" : "",
             ].join(" ")}
             style={{ boxShadow: `0 0 0 rgba(0,0,0,0)` }}
             onMouseEnter={(e) => {
@@ -120,6 +125,11 @@ export function MindGamesHub({ locale, onStartGame }: MindGamesHubProps) {
             }}
           >
             <div className="mb-4 text-4xl">{game.icon}</div>
+            {game.id === "decision" && (
+              <span className="mb-3 inline-flex rounded-full border border-amber-300/30 bg-amber-500/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-amber-100">
+                {locale === "ar" ? "التحدي الرئيسي" : "Main Challenge"}
+              </span>
+            )}
             <h3 className="text-lg font-bold text-white">{game.name[locale]}</h3>
             <p className="mt-1 text-sm text-slate-300">{game.desc[locale]}</p>
             <div className="mt-4 flex items-center justify-between">

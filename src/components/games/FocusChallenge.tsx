@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ShareModal } from "@/components/ShareModal";
+import { getBadgeForScore, type ShareableResult } from "@/lib/challenge";
 import type { Locale } from "@/lib/i18n";
 
 type Phase = "intro" | "playing" | "result";
 
 type FocusChallengeProps = {
   locale: Locale;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, durationMs: number) => void;
   onBack: () => void;
 };
 
@@ -41,7 +43,10 @@ export function FocusChallenge({ locale, onComplete, onBack }: FocusChallengePro
   const [errors, setErrors] = useState(0);
   const [totalHits, setTotalHits] = useState(0);
   const [totalErrors, setTotalErrors] = useState(0);
+  const [finalDurationMs, setFinalDurationMs] = useState(0);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sessionStartRef = useRef(0);
 
   const currentRule = RULE_SETS[roundIndex % RULE_SETS.length];
 
@@ -50,6 +55,7 @@ export function FocusChallenge({ locale, onComplete, onBack }: FocusChallengePro
     setTotalHits((h) => h + hits);
     setTotalErrors((e) => e + errors);
     if (roundIndex + 1 >= TOTAL_ROUNDS) {
+      setFinalDurationMs(Date.now() - sessionStartRef.current);
       setPhase("result");
     } else {
       setTimeout(() => {
@@ -82,12 +88,14 @@ export function FocusChallenge({ locale, onComplete, onBack }: FocusChallengePro
 
   const startGame = () => {
     setRoundIndex(0);
+    sessionStartRef.current = Date.now();
     setItems(generateItems());
     setTapped([]);
     setHits(0);
     setErrors(0);
     setTotalHits(0);
     setTotalErrors(0);
+    setFinalDurationMs(0);
     setTimeLeft(ROUND_DURATION);
     setPhase("playing");
   };
@@ -103,10 +111,25 @@ export function FocusChallenge({ locale, onComplete, onBack }: FocusChallengePro
     }
   };
 
-  const totalTargets = TOTAL_ROUNDS * 9 * 0.5; // approximate
   const focusScore = Math.max(
     0,
     Math.round(((totalHits - totalErrors * 0.5) / Math.max(1, totalHits + totalErrors)) * 100),
+  );
+  const shareResult = useMemo<ShareableResult>(
+    () => ({
+      id: "focus",
+      icon: "🎯",
+      title: { ar: "تحدي التركيز", en: "Focus Challenge" },
+      score: focusScore,
+      timeMs: finalDurationMs,
+      timeKind: "time",
+      badge: getBadgeForScore("focus", focusScore),
+      subtitle: {
+        ar: "كل خطأ يكلفك إيقاعك. السرعة وحدها لا تكفي.",
+        en: "Every miss costs momentum. Speed alone is not enough.",
+      },
+    }),
+    [finalDurationMs, focusScore],
   );
 
   const getFocusLabel = () => {
@@ -194,10 +217,20 @@ export function FocusChallenge({ locale, onComplete, onBack }: FocusChallengePro
             <p className="text-sm text-slate-400">{locale === "ar" ? "درجة التركيز" : "Focus Score"}</p>
             <p className="mt-1 text-4xl font-bold text-emerald-300">{focusScore}%</p>
           </div>
-          <div className="flex gap-3">
+          <div className="inline-flex rounded-full border border-emerald-300/30 bg-emerald-500/10 px-4 py-1 text-sm font-semibold text-emerald-100">
+            {shareResult.badge[locale]}
+          </div>
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => onComplete(focusScore)}
+              onClick={() => setIsShareOpen(true)}
+              className="rounded-full border border-cyan-300/35 bg-cyan-500/15 px-8 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-500/25 active:scale-95"
+            >
+              {locale === "ar" ? "شارك" : "Share"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onComplete(focusScore, finalDurationMs)}
               className="rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-8 py-3 text-sm font-bold text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] transition hover:opacity-90 active:scale-95"
             >
               {locale === "ar" ? "حفظ النتيجة" : "Save Result"}
@@ -210,6 +243,7 @@ export function FocusChallenge({ locale, onComplete, onBack }: FocusChallengePro
               {locale === "ar" ? "رجوع" : "Back"}
             </button>
           </div>
+          <ShareModal locale={locale} open={isShareOpen} result={shareResult} onClose={() => setIsShareOpen(false)} />
         </motion.div>
       </GameContainer>
     );

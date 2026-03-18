@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ShareModal } from "@/components/ShareModal";
 import { RISK_ROUNDS } from "@/data/gameData";
+import { getBadgeForScore, type ShareableResult } from "@/lib/challenge";
 import type { Locale } from "@/lib/i18n";
 
 type Phase = "intro" | "playing" | "result";
 
 type RiskOrSafeProps = {
   locale: Locale;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, durationMs: number) => void;
   onBack: () => void;
 };
 
@@ -18,6 +20,9 @@ export function RiskOrSafe({ locale, onComplete, onBack }: RiskOrSafeProps) {
   const [roundIndex, setRoundIndex] = useState(0);
   const [riskyCount, setRiskyCount] = useState(0);
   const [selected, setSelected] = useState<"safe" | "risky" | null>(null);
+  const [finalDurationMs, setFinalDurationMs] = useState(0);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const sessionStartRef = useRef(0);
 
   const currentRound = RISK_ROUNDS[roundIndex];
 
@@ -27,6 +32,7 @@ export function RiskOrSafe({ locale, onComplete, onBack }: RiskOrSafeProps) {
     if (choice === "risky") setRiskyCount((c) => c + 1);
     setTimeout(() => {
       if (roundIndex + 1 >= RISK_ROUNDS.length) {
+        setFinalDurationMs(Date.now() - sessionStartRef.current);
         setPhase("result");
       } else {
         setRoundIndex((i) => i + 1);
@@ -36,6 +42,22 @@ export function RiskOrSafe({ locale, onComplete, onBack }: RiskOrSafeProps) {
   };
 
   const riskScore = Math.round((riskyCount / RISK_ROUNDS.length) * 100);
+  const shareResult = useMemo<ShareableResult>(
+    () => ({
+      id: "risk",
+      icon: "🎲",
+      title: { ar: "مخاطرة أم أمان", en: "Risk or Safe" },
+      score: riskScore,
+      timeMs: finalDurationMs,
+      timeKind: "time",
+      badge: getBadgeForScore("risk", riskScore),
+      subtitle: {
+        ar: "جرأتك تُقاس هنا: هل اخترت الأمان أم القفز نحو المجهول؟",
+        en: "Your daring is measured here: did you choose safety or leap into the unknown?",
+      },
+    }),
+    [finalDurationMs, riskScore],
+  );
 
   const getRiskLabel = () => {
     if (riskScore >= 75)
@@ -89,7 +111,11 @@ export function RiskOrSafe({ locale, onComplete, onBack }: RiskOrSafeProps) {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setPhase("playing")}
+              onClick={() => {
+                sessionStartRef.current = Date.now();
+                setFinalDurationMs(0);
+                setPhase("playing");
+              }}
               className="rounded-full bg-gradient-to-r from-rose-500 to-red-500 px-8 py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(244,63,94,0.4)] transition hover:opacity-90 active:scale-95"
             >
               {locale === "ar" ? "ابدأ 🎲" : "Start 🎲"}
@@ -124,10 +150,20 @@ export function RiskOrSafe({ locale, onComplete, onBack }: RiskOrSafeProps) {
             <p className="text-sm text-slate-400">{locale === "ar" ? "درجة المغامرة" : "Risk Score"}</p>
             <p className="mt-1 text-4xl font-bold text-rose-300">{riskScore}%</p>
           </div>
-          <div className="flex gap-3">
+          <div className="inline-flex rounded-full border border-rose-300/30 bg-rose-500/10 px-4 py-1 text-sm font-semibold text-rose-100">
+            {shareResult.badge[locale]}
+          </div>
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => onComplete(riskScore)}
+              onClick={() => setIsShareOpen(true)}
+              className="rounded-full border border-cyan-300/35 bg-cyan-500/15 px-8 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-500/25 active:scale-95"
+            >
+              {locale === "ar" ? "شارك" : "Share"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onComplete(riskScore, finalDurationMs)}
               className="rounded-full bg-gradient-to-r from-rose-500 to-red-500 px-8 py-3 text-sm font-bold text-white shadow-[0_0_20px_rgba(244,63,94,0.3)] transition hover:opacity-90 active:scale-95"
             >
               {locale === "ar" ? "حفظ النتيجة" : "Save Result"}
@@ -140,6 +176,7 @@ export function RiskOrSafe({ locale, onComplete, onBack }: RiskOrSafeProps) {
               {locale === "ar" ? "رجوع" : "Back"}
             </button>
           </div>
+          <ShareModal locale={locale} open={isShareOpen} result={shareResult} onClose={() => setIsShareOpen(false)} />
         </motion.div>
       </GameContainer>
     );

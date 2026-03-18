@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { MEMORY_SYMBOLS } from "@/data/gameData";
 import type { Locale } from "@/lib/i18n";
 import { saveScore } from "@/lib/gameScores";

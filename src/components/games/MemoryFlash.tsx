@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { ShareModal } from "@/components/ShareModal";
 import { MEMORY_SYMBOLS } from "@/data/gameData";
+import { getBadgeForScore, type ShareableResult } from "@/lib/challenge";
 import type { Locale } from "@/lib/i18n";
 
 type Phase = "intro" | "show" | "hide" | "answer" | "result";
 
 type MemoryFlashProps = {
   locale: Locale;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, durationMs: number) => void;
   onBack: () => void;
 };
 
@@ -34,6 +36,9 @@ export function MemoryFlash({ locale, onComplete, onBack }: MemoryFlashProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const [roundScores, setRoundScores] = useState<number[]>([]);
   const [countdown, setCountdown] = useState(SHOW_DURATION / 1000);
+  const [finalDurationMs, setFinalDurationMs] = useState(0);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const sessionStartRef = useRef(0);
 
   const startRound = () => {
     const shown = pickRandom(MEMORY_SYMBOLS, SHOW_COUNT);
@@ -72,6 +77,7 @@ export function MemoryFlash({ locale, onComplete, onBack }: MemoryFlashProps) {
     const next = [...roundScores, score];
     setRoundScores(next);
     if (round + 1 >= ROUNDS) {
+      setFinalDurationMs(Date.now() - sessionStartRef.current);
       setPhase("result");
     } else {
       setRound((r) => r + 1);
@@ -80,6 +86,22 @@ export function MemoryFlash({ locale, onComplete, onBack }: MemoryFlashProps) {
   };
 
   const finalScore = roundScores.length > 0 ? Math.round(roundScores.reduce((a, b) => a + b, 0) / roundScores.length) : 0;
+  const shareResult = useMemo<ShareableResult>(
+    () => ({
+      id: "memory",
+      icon: "🔮",
+      title: { ar: "اختبار الذاكرة", en: "Memory Flash" },
+      score: finalScore,
+      timeMs: finalDurationMs,
+      timeKind: "time",
+      badge: getBadgeForScore("memory", finalScore),
+      subtitle: {
+        ar: "اختبر سرعة الاستحضار ودقة التذكر تحت الضغط.",
+        en: "Test recall speed and memory precision under pressure.",
+      },
+    }),
+    [finalDurationMs, finalScore],
+  );
 
   const getMemoryLabel = (score: number) => {
     if (score >= 80) return locale === "ar" ? "ذاكرة خارقة 🌟" : "Exceptional Memory 🌟";
@@ -106,7 +128,11 @@ export function MemoryFlash({ locale, onComplete, onBack }: MemoryFlashProps) {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={startRound}
+              onClick={() => {
+                sessionStartRef.current = Date.now();
+                setFinalDurationMs(0);
+                startRound();
+              }}
               className="rounded-full bg-gradient-to-r from-violet-500 to-purple-500 px-8 py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(139,92,246,0.4)] transition hover:opacity-90 active:scale-95"
             >
               {locale === "ar" ? "ابدأ 🔮" : "Start 🔮"}
@@ -225,10 +251,20 @@ export function MemoryFlash({ locale, onComplete, onBack }: MemoryFlashProps) {
           <p className="text-sm text-slate-400">{locale === "ar" ? "درجة الذاكرة" : "Memory Score"}</p>
           <p className="mt-1 text-4xl font-bold text-violet-300">{finalScore}%</p>
         </div>
-        <div className="flex gap-3">
+        <div className="inline-flex rounded-full border border-violet-300/30 bg-violet-500/10 px-4 py-1 text-sm font-semibold text-violet-100">
+          {shareResult.badge[locale]}
+        </div>
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => onComplete(finalScore)}
+            onClick={() => setIsShareOpen(true)}
+            className="rounded-full border border-cyan-300/35 bg-cyan-500/15 px-8 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-500/25 active:scale-95"
+          >
+            {locale === "ar" ? "شارك" : "Share"}
+          </button>
+          <button
+            type="button"
+            onClick={() => onComplete(finalScore, finalDurationMs)}
             className="rounded-full bg-gradient-to-r from-violet-500 to-purple-500 px-8 py-3 text-sm font-bold text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] transition hover:opacity-90 active:scale-95"
           >
             {locale === "ar" ? "حفظ النتيجة" : "Save Result"}
@@ -241,6 +277,7 @@ export function MemoryFlash({ locale, onComplete, onBack }: MemoryFlashProps) {
             {locale === "ar" ? "رجوع" : "Back"}
           </button>
         </div>
+        <ShareModal locale={locale} open={isShareOpen} result={shareResult} onClose={() => setIsShareOpen(false)} />
       </motion.div>
     </GameContainer>
   );

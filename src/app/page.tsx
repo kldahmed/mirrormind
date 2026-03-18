@@ -18,13 +18,20 @@ import { IntuitionTest } from "@/components/games/IntuitionTest";
 import { MemoryFlash } from "@/components/games/MemoryFlash";
 import { RiskOrSafe } from "@/components/games/RiskOrSafe";
 import { QUESTIONS } from "@/data/questions";
+import {
+  buildChallengeEntry,
+  saveLocalAttempt,
+  submitFeaturedAttempt,
+  type GameId,
+  type TimeKind,
+} from "@/lib/challenge";
 import { DEFAULT_LOCALE, localeDirection, t, type Locale, uiCopy } from "@/lib/i18n";
 import { saveScore } from "@/lib/gameScores";
 import { getPersonalityResult } from "@/lib/scoreEngine";
 
 type NavSection = "test" | "games" | "profile";
 type TestStage = "home" | "test" | "result";
-type ActiveGame = "decision" | "memory" | "risk" | "intuition" | "focus" | null;
+type ActiveGame = GameId | null;
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
@@ -88,8 +95,17 @@ export default function Home() {
     setActiveGame(null);
   };
 
-  const handleStartGame = (gameId: string) => {
-    setActiveGame(gameId as ActiveGame);
+  const persistGameAttempt = (gameId: GameId, score: number, timeMs: number | null, timeKind: TimeKind) => {
+    const entry = buildChallengeEntry({ locale, gameId, score, timeMs, timeKind });
+    if (gameId === "decision") {
+      void submitFeaturedAttempt(entry);
+      return;
+    }
+    saveLocalAttempt(entry);
+  };
+
+  const handleStartGame = (gameId: GameId) => {
+    setActiveGame(gameId);
   };
 
   const handleGameDone = () => {
@@ -97,29 +113,38 @@ export default function Home() {
     setSection("profile");
   };
 
-  const handleDecisionDone = (style: import("@/lib/gameScores").DecisionStyle, score: number) => {
+  const handleDecisionDone = (
+    style: import("@/lib/gameScores").DecisionStyle,
+    score: number,
+    reactionMs: number,
+  ) => {
     saveScore("decisionStyle", style);
     saveScore("decisionScore", score);
+    persistGameAttempt("decision", score, reactionMs, "reaction");
     handleGameDone();
   };
 
-  const handleMemoryDone = (score: number) => {
+  const handleMemoryDone = (score: number, durationMs: number) => {
     saveScore("memoryScore", score);
+    persistGameAttempt("memory", score, durationMs, "time");
     handleGameDone();
   };
 
-  const handleRiskDone = (score: number) => {
+  const handleRiskDone = (score: number, durationMs: number) => {
     saveScore("riskScore", score);
+    persistGameAttempt("risk", score, durationMs, "time");
     handleGameDone();
   };
 
-  const handleIntuitionDone = (score: number) => {
+  const handleIntuitionDone = (score: number, durationMs: number) => {
     saveScore("intuitionScore", score);
+    persistGameAttempt("intuition", score, durationMs, "time");
     handleGameDone();
   };
 
-  const handleFocusDone = (score: number) => {
+  const handleFocusDone = (score: number, durationMs: number) => {
     saveScore("focusScore", score);
+    persistGameAttempt("focus", score, durationMs, "time");
     handleGameDone();
   };
 

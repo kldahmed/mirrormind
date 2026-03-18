@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ShareModal } from "@/components/ShareModal";
 import { INTUITION_SCENARIOS } from "@/data/gameData";
+import { getBadgeForScore, type ShareableResult } from "@/lib/challenge";
 import type { Locale } from "@/lib/i18n";
 
 type Phase = "intro" | "playing" | "result";
 
 type IntuitionTestProps = {
   locale: Locale;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, durationMs: number) => void;
   onBack: () => void;
 };
 
@@ -19,6 +21,9 @@ export function IntuitionTest({ locale, onComplete, onBack }: IntuitionTestProps
   const [totalScore, setTotalScore] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [showInsight, setShowInsight] = useState(false);
+  const [finalDurationMs, setFinalDurationMs] = useState(0);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const sessionStartRef = useRef(0);
 
   const currentQ = INTUITION_SCENARIOS[questionIndex];
 
@@ -32,6 +37,7 @@ export function IntuitionTest({ locale, onComplete, onBack }: IntuitionTestProps
       setShowInsight(false);
       setTimeout(() => {
         if (questionIndex + 1 >= INTUITION_SCENARIOS.length) {
+          setFinalDurationMs(Date.now() - sessionStartRef.current);
           setPhase("result");
         } else {
           setQuestionIndex((i) => i + 1);
@@ -43,6 +49,22 @@ export function IntuitionTest({ locale, onComplete, onBack }: IntuitionTestProps
 
   const maxPossible = INTUITION_SCENARIOS.length * 3;
   const intuitionScore = Math.round((totalScore / maxPossible) * 100);
+  const shareResult = useMemo<ShareableResult>(
+    () => ({
+      id: "intuition",
+      icon: "👁",
+      title: { ar: "اختبار الحدس", en: "Intuition Test" },
+      score: intuitionScore,
+      timeMs: finalDurationMs,
+      timeKind: "time",
+      badge: getBadgeForScore("intuition", intuitionScore),
+      subtitle: {
+        ar: "هل قرأت الإشارات المخفية أسرع من الآخرين؟",
+        en: "Did you read the hidden cues faster than others?",
+      },
+    }),
+    [finalDurationMs, intuitionScore],
+  );
 
   const getIntuitionLabel = () => {
     if (intuitionScore >= 80)
@@ -96,7 +118,11 @@ export function IntuitionTest({ locale, onComplete, onBack }: IntuitionTestProps
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setPhase("playing")}
+              onClick={() => {
+                sessionStartRef.current = Date.now();
+                setFinalDurationMs(0);
+                setPhase("playing");
+              }}
               className="rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 px-8 py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(6,182,212,0.4)] transition hover:opacity-90 active:scale-95"
             >
               {locale === "ar" ? "ابدأ 👁" : "Start 👁"}
@@ -131,10 +157,20 @@ export function IntuitionTest({ locale, onComplete, onBack }: IntuitionTestProps
             <p className="text-sm text-slate-400">{locale === "ar" ? "درجة الحدس" : "Intuition Score"}</p>
             <p className="mt-1 text-4xl font-bold text-cyan-300">{intuitionScore}%</p>
           </div>
-          <div className="flex gap-3">
+          <div className="inline-flex rounded-full border border-cyan-300/30 bg-cyan-500/10 px-4 py-1 text-sm font-semibold text-cyan-100">
+            {shareResult.badge[locale]}
+          </div>
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => onComplete(intuitionScore)}
+              onClick={() => setIsShareOpen(true)}
+              className="rounded-full border border-cyan-300/35 bg-cyan-500/15 px-8 py-3 text-sm font-bold text-cyan-50 transition hover:bg-cyan-500/25 active:scale-95"
+            >
+              {locale === "ar" ? "شارك" : "Share"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onComplete(intuitionScore, finalDurationMs)}
               className="rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 px-8 py-3 text-sm font-bold text-white shadow-[0_0_20px_rgba(6,182,212,0.3)] transition hover:opacity-90 active:scale-95"
             >
               {locale === "ar" ? "حفظ النتيجة" : "Save Result"}
@@ -147,6 +183,7 @@ export function IntuitionTest({ locale, onComplete, onBack }: IntuitionTestProps
               {locale === "ar" ? "رجوع" : "Back"}
             </button>
           </div>
+          <ShareModal locale={locale} open={isShareOpen} result={shareResult} onClose={() => setIsShareOpen(false)} />
         </motion.div>
       </GameContainer>
     );
